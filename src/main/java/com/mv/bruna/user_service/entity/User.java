@@ -10,6 +10,15 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 public class User {
 
+    public User() {
+    }
+
+    public User(Long id, String name, String email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

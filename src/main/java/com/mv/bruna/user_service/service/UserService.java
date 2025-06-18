@@ -4,6 +4,8 @@ import com.mv.bruna.user_service.dto.TaskInfoDTO;
 import com.mv.bruna.user_service.dto.UserDTO;
 import com.mv.bruna.user_service.entity.User;
 import com.mv.bruna.user_service.exception.BusinessRuleException;
+import com.mv.bruna.user_service.exception.CustomHttpException;
+import com.mv.bruna.user_service.exception.ErrorResponse;
 import com.mv.bruna.user_service.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -31,17 +33,46 @@ public class UserService {
     @Value("${task.service.url}")
     private String taskServiceUrl;
 
+    public UserService(UserRepository userRepository, RestTemplate restTemplate) {
+        this.userRepository = userRepository;
+        this.restTemplate = restTemplate;
+    }
 
     public List<UserDTO> listAll() {
-        return userRepository.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+        try {
+            return userRepository.findAll().stream()
+                    .map(this::toDTO)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            ErrorResponse error = new ErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Erro ao listar usuários",
+                    e.getMessage()
+            );
+            throw new CustomHttpException(error);
+        }
     }
 
     public UserDTO findById(Long id) {
-        return userRepository.findById(id)
-                .map(this::toDTO)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+        try {
+            return userRepository.findById(id)
+                    .map(this::toDTO)
+                    .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+        } catch (EntityNotFoundException e) {
+            ErrorResponse error = new ErrorResponse(
+                    HttpStatus.NOT_FOUND.value(),
+                    e.getMessage(),
+                    "EntityNotFoundException"
+            );
+            throw new CustomHttpException(error);
+        } catch (Exception e) {
+            ErrorResponse error = new ErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Erro ao buscar usuário por ID",
+                    e.getMessage()
+            );
+            throw new CustomHttpException(error);
+        }
     }
 
     public UserDTO create(UserDTO dto) {
@@ -58,20 +89,46 @@ public class UserService {
             return toDTO(savedUser);
 
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            ErrorResponse error = new ErrorResponse(
+                    HttpStatus.BAD_REQUEST.value(),
+                    e.getMessage(),
+                    "IllegalArgumentException"
+            );
+            throw new CustomHttpException(error);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao criar usuário");
+            ErrorResponse error = new ErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Erro ao criar usuário",
+                    e.getMessage()
+            );
+            throw new CustomHttpException(error);
         }
     }
 
-
     public UserDTO update(Long id, UserDTO dto) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+        try {
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        return toDTO(userRepository.save(user));
+            user.setName(dto.getName());
+            user.setEmail(dto.getEmail());
+            return toDTO(userRepository.save(user));
+
+        } catch (EntityNotFoundException e) {
+            ErrorResponse error = new ErrorResponse(
+                    HttpStatus.NOT_FOUND.value(),
+                    e.getMessage(),
+                    "EntityNotFoundException"
+            );
+            throw new CustomHttpException(error);
+        } catch (Exception e) {
+            ErrorResponse error = new ErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Erro ao atualizar usuário",
+                    e.getMessage()
+            );
+            throw new CustomHttpException(error);
+        }
     }
 
     public void delete(Long id) throws Exception {
@@ -91,8 +148,21 @@ public class UserService {
                 throw new BusinessRuleException("Usuário não pode ser excluído pois possui tarefas pendentes ou em andamento.");
             }
             userRepository.deleteById(id);
-        } catch (Exception e) {
-            throw new Exception(e.getMessage(), e.getCause());
+
+        } catch (BusinessRuleException | EntityNotFoundException ex) {
+            ErrorResponse errorResponse = new ErrorResponse(
+                    HttpStatus.BAD_REQUEST.value(),
+                    ex.getMessage(),
+                    ex.getClass().getSimpleName()
+            );
+            throw new CustomHttpException(errorResponse);
+        } catch (Exception ex) {
+            ErrorResponse errorResponse = new ErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Erro interno inesperado",
+                    ex.getMessage()
+            );
+            throw new CustomHttpException(errorResponse);
         }
     }
 
