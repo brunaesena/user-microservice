@@ -120,8 +120,11 @@ public class UserServiceTest {
 
     @Test
     void delete_ShouldDeleteUser_WhenNoBlockedTasks() throws Exception {
+        userService.setRestTemplate(restTemplate);
         User user = new User(1L, "Pedro", "pedro@email.com");
-        TaskInfoDTO[] tasks = { new TaskInfoDTO(1L, "COMPLETED") };
+        TaskInfoDTO[] tasks = new TaskInfoDTO[] {
+                new TaskInfoDTO(1L, "COMPLETED")
+        };
 
         Mockito.when(userRepository.existsById(1L)).thenReturn(true);
         Mockito.when(restTemplate.getForEntity(Mockito.anyString(), Mockito.eq(TaskInfoDTO[].class)))
@@ -135,7 +138,7 @@ public class UserServiceTest {
     @Test
     void delete_ShouldThrowException_WhenHasPendingTasks() throws Exception {
         TaskInfoDTO[] tasks = { new TaskInfoDTO(1L,  "IN_PROGRESS") };
-
+        userService.setRestTemplate(restTemplate);
         Mockito.when(userRepository.existsById(1L)).thenReturn(true);
         Mockito.when(restTemplate.getForEntity(Mockito.anyString(), Mockito.eq(TaskInfoDTO[].class)))
                 .thenReturn(new ResponseEntity<>(tasks, HttpStatus.OK));

@@ -1,22 +1,32 @@
 package com.mv.bruna.user_service;
 
+import com.mv.bruna.user_service.dto.TaskInfoDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mv.bruna.user_service.entity.User;
 import com.mv.bruna.user_service.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -44,10 +54,23 @@ public class UserControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
+    private RestTemplate restTemplate;
+
+    @TestConfiguration
+    static class RestTemplateTestConfig {
+        @Bean
+        @Primary
+        public RestTemplate restTemplate() {
+            return Mockito.mock(RestTemplate.class);
+        }
+    }
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
+
 
     @BeforeEach
     void setUp() {
@@ -100,7 +123,13 @@ public class UserControllerIntegrationTest {
     @DisplayName("Deve deletar um usuário com sucesso via API")
     void shouldDeleteUserSuccessfully() throws Exception {
         User user = userRepository.save(new User(null, "Usuário Para Deletar", "delete@email.com"));
-
+        TaskInfoDTO[] mockTasks = new TaskInfoDTO[] {
+                new TaskInfoDTO(1L, "COMPLETED") // status aceitável para deletar
+        };
+        Mockito.when(restTemplate.getForEntity(
+                Mockito.eq("http://task-service:8080/api/tasks/user/" + user.getId()),
+                Mockito.eq(TaskInfoDTO[].class))
+        ).thenReturn(new ResponseEntity<>(mockTasks, HttpStatus.OK));
         mockMvc.perform(delete("/api/users/" + user.getId()))
                 .andExpect(status().isNoContent());
     }

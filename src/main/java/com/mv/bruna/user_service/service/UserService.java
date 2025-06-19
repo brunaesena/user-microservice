@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
-
+    @Autowired
     private RestTemplate restTemplate;
 
     @Value("${task.service.url}")
@@ -163,5 +163,9 @@ public class UserService {
 
     private UserDTO toDTO(User user) {
         return new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getCreatedAt());
+    }
+
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 }
