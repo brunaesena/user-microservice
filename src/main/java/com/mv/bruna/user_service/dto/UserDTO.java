@@ -1,9 +1,12 @@
 package com.mv.bruna.user_service.dto;
 
+import java.time.LocalDateTime;
+
 public class UserDTO {
     private Long id;
     private String name;
     private String email;
+    private LocalDateTime createdAt;
 
     public UserDTO() {}
 
@@ -11,6 +14,13 @@ public class UserDTO {
         this.id = id;
         this.name = name;
         this.email = email;
+    }
+
+    public UserDTO(Long id, String name, String email, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.createdAt = createdAt;
     }
 
     public Long getId() {
@@ -35,5 +45,13 @@ public class UserDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
