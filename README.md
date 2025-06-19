@@ -94,10 +94,16 @@ O projeto foi desenvolvido como parte de um desafio técnico com foco em:
 
 ---
 
+## 📃 Documentação - Swagger
+
+- A documentação dos endpoints está disponível em `user-microservice-openapi.yaml` e pode ser visualizada com https://editor.swagger.io/
+
+---
+
 ## 📌 Notas Finais
 
 - Certifique-se de que as portas `8081`, `8082`, `5432` e `5433` estão livres no seu ambiente local.
-- Utilize o perfil `test` para rodar testes com banco isolado.
+- Esse microsserviço se comunica com o `task-microservice`, portanto é recomendado subir ambos via Docker.
 - O frontend está configurado para consumir os microsserviços via HTTP.
 
 ---
