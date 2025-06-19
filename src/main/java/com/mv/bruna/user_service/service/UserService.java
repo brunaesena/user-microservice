@@ -27,16 +27,10 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    @Autowired
     private RestTemplate restTemplate;
 
     @Value("${task.service.url}")
     private String taskServiceUrl;
-
-    public UserService(UserRepository userRepository, RestTemplate restTemplate) {
-        this.userRepository = userRepository;
-        this.restTemplate = restTemplate;
-    }
 
     public List<UserDTO> listAll() {
         try {

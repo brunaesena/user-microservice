@@ -38,7 +38,7 @@ public class UserServiceTest {
 
     @BeforeEach
     void setup() {
-        userService = new UserService(userRepository, restTemplate);
+        userService = new UserService(userRepository);
         ReflectionTestUtils.setField(userService, "taskServiceUrl", TASK_URL);
     }
 
